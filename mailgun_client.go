@@ -22,12 +22,6 @@ type EmailMessage struct {
 	AttachmentPath string
 }
 
-// MIMEMessage is a helper struct for passing the
-type MIMEMessage struct {
-	message     bytes.Buffer
-	contentType string
-}
-
 // HTTPStatusError represents an HTTP status code and the related
 // error message returned from failing requests.
 type HTTPStatusError struct {
@@ -61,13 +55,13 @@ func NewMailgunClient(baseURL, domain, key string) *MailgunClient {
 }
 
 // SendRequest sends an email
-func (c *MailgunClient) SendRequest(ctx context.Context, msg MIMEMessage) (id string, err error) {
-	req, err := http.NewRequest("POST", c.url, &msg.message)
+func (c *MailgunClient) SendRequest(message bytes.Buffer, contentType string) (id string, err error) {
+	req, err := http.NewRequest("POST", c.url, &message)
 	if err != nil {
 		return "", fmt.Errorf("creating request: %w", err)
 	}
 
-	req.Header.Set("Content-Type", msg.contentType)
+	req.Header.Set("Content-Type", contentType)
 	req.SetBasicAuth("api", c.apiKey)
 
 	resp, err := c.client.Do(req)
@@ -100,8 +94,9 @@ func (c *MailgunClient) SendRequest(ctx context.Context, msg MIMEMessage) (id st
 }
 
 func (c *MailgunClient) SendEmail(ctx context.Context, msg EmailMessage) (id string, err error) {
-	mime := MIMEMessage{}
-	writer := multipart.NewWriter(&mime.message)
+	var message bytes.Buffer
+
+	writer := multipart.NewWriter(&message)
 
 	writer.WriteField("from", msg.From)
 	writer.WriteField("subject", msg.Subject)
@@ -135,11 +130,11 @@ func (c *MailgunClient) SendEmail(ctx context.Context, msg EmailMessage) (id str
 
 	}
 
-	mime.contentType = writer.FormDataContentType()
+	contentType := writer.FormDataContentType()
 
 	writer.Close()
 
-	id, err = c.SendRequest(ctx, mime)
+	id, err = c.SendRequest(message, contentType)
 	if err != nil {
 		return "", err
 	}
