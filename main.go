@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -22,8 +21,6 @@ func main() {
 	recipient1 := os.Getenv("MAILGUN_TEST_RECIPIENT_1")
 	recipient2 := os.Getenv("MAILGUN_TEST_RECIPIENT_2")
 
-	ctx := context.Background()
-
 	msg := EmailMessage{
 		From:    sender,
 		To:      []string{recipient1},
@@ -34,7 +31,7 @@ func main() {
 
 	// Demonstrate single email
 	fmt.Println("Sending single email...")
-	if id, err := client.SendEmail(ctx, msg); err != nil {
+	if id, err := client.SendEmail(msg); err != nil {
 		handleError("single email", err)
 	} else {
 		fmt.Println("✓ Single email sent successfully, message ID =", id)
@@ -47,7 +44,7 @@ func main() {
 	msg.Text = "Hello from Mailgun!"
 	msg.HTML = ""
 
-	if id, err := client.SendEmail(ctx, msg); err != nil {
+	if id, err := client.SendEmail(msg); err != nil {
 		handleError("bulk email", err)
 	} else {
 		fmt.Println("✓ Bulk email sent successfully, message ID =", id)
@@ -60,7 +57,7 @@ func main() {
 	msg.Text = "Please find the attached document."
 	msg.AttachmentPath = "gopher.webp"
 
-	if id, err := client.SendEmail(ctx, msg); err != nil {
+	if id, err := client.SendEmail(msg); err != nil {
 		handleError("email with attachment", err)
 	} else {
 		fmt.Println("✓ Email with attachment sent successfully, message ID =", id)

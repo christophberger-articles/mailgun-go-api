@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -93,7 +92,7 @@ func (c *MailgunClient) SendRequest(message bytes.Buffer, contentType string) (i
 
 }
 
-func (c *MailgunClient) SendEmail(ctx context.Context, msg EmailMessage) (id string, err error) {
+func (c *MailgunClient) SendEmail(msg EmailMessage) (id string, err error) {
 	var message bytes.Buffer
 
 	writer := multipart.NewWriter(&message)
