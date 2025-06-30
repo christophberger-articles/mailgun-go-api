@@ -67,6 +67,7 @@ func (c *MailgunClient) SendRequest(message bytes.Buffer, contentType string) (i
 	var responseBody []byte
 	const retry = 3
 
+Loop:
 	for i := range retry {
 
 		resp, err := c.client.Do(req)
@@ -75,7 +76,7 @@ func (c *MailgunClient) SendRequest(message bytes.Buffer, contentType string) (i
 		}
 		defer resp.Body.Close()
 
-		responseBody, err := io.ReadAll(resp.Body)
+		responseBody, err = io.ReadAll(resp.Body)
 		if err != nil {
 			return "", fmt.Errorf("reading response body: %w", err)
 		}
@@ -91,13 +92,13 @@ func (c *MailgunClient) SendRequest(message bytes.Buffer, contentType string) (i
 				Message:    string(responseBody),
 			}
 		default: // status code < 400
-			break
+			break Loop
 		}
 	}
 
 	// An ad-hoc struct for extracting the response ID
 	var response struct {
-		Id string
+		Id string `json:"id"`
 	}
 
 	err = json.Unmarshal(responseBody, &response)
