@@ -63,33 +63,31 @@ func (c *MailgunClient) SendRequest(message bytes.Buffer, contentType string) (i
 	req.Header.Set("Content-Type", contentType)
 	req.SetBasicAuth("api", c.apiKey)
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("sending request: %w", err)
-	}
-	defer resp.Body.Close()
+		resp, err := c.client.Do(req)
+		if err != nil {
+			return "", fmt.Errorf("sending request: %w", err)
+		}
+		defer resp.Body.Close()
 
 	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("reading response body: %w", err)
-	}
+		if err != nil {
+			return "", fmt.Errorf("reading response body: %w", err)
+		}
 
 	if resp.StatusCode >= 400 {
-		return "", HTTPStatusError{
-			StatusCode: resp.StatusCode,
-			Message:    string(responseBody),
-		}
+			return "", HTTPStatusError{
+				StatusCode: resp.StatusCode,
+				Message:    string(responseBody),
+			}
 	}
 
-	// An ad-hoc struct for extracting the response ID
+	// An ad hoc struct for extracting the response ID
 	var response struct {
-		Id string
+		Id string `json:"id"`
 	}
 
 	err = json.Unmarshal(responseBody, &response)
-
 	return response.Id, nil
-
 }
 
 func (c *MailgunClient) SendEmail(msg EmailMessage) (id string, err error) {
