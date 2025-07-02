@@ -70,5 +70,5 @@ func handleError(operation string, err error) {
 		fmt.Printf("%s: sending failed: HTTP error %d: %s\n", operation, httpErr.StatusCode, httpErr.Message)
 		return
 	}
-	fmt.Printf("Sending failed: %s"\n, err)
+	fmt.Printf("Sending failed: %s\n", err)
 }
