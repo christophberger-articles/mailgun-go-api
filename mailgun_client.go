@@ -96,7 +96,7 @@ Loop:
 		}
 	}
 
-	// An ad-hoc struct for extracting the response ID
+	// An ad hoc struct for extracting the response ID
 	var response struct {
 		Id string `json:"id"`
 	}
