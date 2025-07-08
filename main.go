@@ -21,6 +21,7 @@ func main() {
 	recipient1 := os.Getenv("MAILGUN_TEST_RECIPIENT_1")
 	recipient2 := os.Getenv("MAILGUN_TEST_RECIPIENT_2")
 
+	// Send a single email
 	msg := EmailMessage{
 		Sender: sender,
 		Recipients: Recipients{
@@ -31,7 +32,6 @@ func main() {
 		HTML:    "<html><head></head><body><h1>Test</h1><p>This is a test email sent via the Mailgun API.</p></body>",
 	}
 
-	// Demonstrate single email
 	fmt.Println("Sending single email...")
 	if id, err := client.SendEmail(msg); err != nil {
 		handleError("single email", err)
@@ -39,7 +39,7 @@ func main() {
 		fmt.Println("✓ Single email sent successfully, message ID =", id)
 	}
 
-	// Demonstrate bulk email
+	// Send bulk email
 	fmt.Println("Sending bulk email...")
 	msg = EmailMessage{
 		Sender: sender,
@@ -67,7 +67,7 @@ func main() {
 		fmt.Println("✓ Bulk email sent successfully, message ID =", id)
 	}
 
-	//	Demonstrate email with attachment
+	//	Send an email with attachment
 	fmt.Println("Sending email with attachment...")
 	msg = EmailMessage{
 		Sender: sender,
