@@ -58,9 +58,6 @@ func main() {
 		HTML:    "<html><head></head><body><h1>Test</h1><p>This is a bulk email sent via the Mailgun API.</p></body>",
 	}
 
-	msg.Text = "Hello from Mailgun!"
-	msg.HTML = ""
-
 	if id, err := client.SendEmail(msg); err != nil {
 		handleError("bulk email", err)
 	} else {
