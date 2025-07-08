@@ -17,16 +17,16 @@ type User struct {
 	Id   string `json:"id"`
 }
 
-// Recipient holds the data of a recipient.
-type Recipient struct {
-	Email string
-	User  User
-}
+// Recipients holds the data of a recipient.
+// By using a map type (rather than a struct with Email and User fields),
+// function SendEmail() can trivially JSONify the Recipients into a
+// Mailgun Recipient Variables data structure.
+type Recipients map[string]User
 
 // EmailMessage contains email headers and body parts
 type EmailMessage struct {
-	From           string
-	To             []Recipient
+	Sender         string
+	Recipients     Recipients
 	Subject        string
 	Text           string
 	HTML           string
@@ -107,28 +107,16 @@ func (c *MailgunClient) SendEmail(msg EmailMessage) (id string, err error) {
 
 	writer := multipart.NewWriter(&message)
 
-	writer.WriteField("from", msg.From)
+	writer.WriteField("from", msg.Sender)
 	writer.WriteField("subject", msg.Subject)
 
-	if len(msg.To) == 1 {
-		// single recipient
-		writer.WriteField("to", msg.To[0].Email)
-	} else {
-		// bulk email, use batch sending
-		// create multiple To fields
-		rcptVars := map[string]User{}
-
-		for _, recipient := range msg.To {
-			writer.WriteField("to", recipient.Email)
-
-			// construct the Recipient Variables
-			rcptVars[recipient.Email] = User{
-				Name: recipient.User.Name,
-				Id:   recipient.User.Id,
-			}
-		}
-		// construct the Recipients Variables
-		rv, err := json.Marshal(rcptVars)
+	for email, _ := range msg.Recipients {
+		writer.WriteField("to", email)
+	}
+	if len(msg.Recipients) > 1 {
+		// bulk email mode, use batch sending
+		// create the Recipients Variable JSON
+		rv, err := json.Marshal(msg.Recipients)
 		if err != nil {
 			return "", fmt.Errorf("SendEmail: %v", err)
 		}

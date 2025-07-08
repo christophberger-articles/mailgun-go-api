@@ -22,12 +22,9 @@ func main() {
 	recipient2 := os.Getenv("MAILGUN_TEST_RECIPIENT_2")
 
 	msg := EmailMessage{
-		From: sender,
-		To: []Recipient{
-			{
-				Email: recipient1,
-				User:  User{},
-			},
+		Sender: sender,
+		Recipients: Recipients{
+			recipient1: User{},
 		},
 		Subject: "Hello from Mailgun!",
 		Text:    "This is a test email sent via Mailgun API.",
@@ -44,23 +41,23 @@ func main() {
 
 	// Demonstrate bulk email
 	fmt.Println("Sending bulk email...")
-	msg.Subject = "A Bulk Email from Mailgun!"
-	msg.To = []Recipient{
-		{
-			Email: recipient1,
-			User: User{
+	msg = EmailMessage{
+		Sender: sender,
+		Recipients: Recipients{
+			recipient1: User{
 				Name: "Alice",
-				Id:   "RCPT1",
+				Id:   "1",
 			},
-		},
-		{
-			Email: recipient2,
-			User: User{
+			recipient2: User{
 				Name: "Bob",
-				Id:   "RCPT2",
+				Id:   "2",
 			},
 		},
+		Subject: "A Bulk Email from Mailgun!",
+		Text:    "This is a bulk email sent via Mailgun API.",
+		HTML:    "<html><head></head><body><h1>Test</h1><p>This is a bulk email sent via the Mailgun API.</p></body>",
 	}
+
 	msg.Text = "Hello from Mailgun!"
 	msg.HTML = ""
 
@@ -72,15 +69,16 @@ func main() {
 
 	//	Demonstrate email with attachment
 	fmt.Println("Sending email with attachment...")
-	msg.To = []Recipient{
-		{
-			Email: recipient1,
-			User:  User{},
+	msg = EmailMessage{
+		Sender: sender,
+		Recipients: Recipients{
+			recipient1: User{},
 		},
+		Subject:        "Email with Attachment",
+		Text:           "Please find the flyer attached.",
+		HTML:           "<html><head></head><body><h1>Attachment Test</h1><p>Please find the flyer attached.</p></body>",
+		AttachmentPath: "gopher.webp",
 	}
-	msg.Subject = "Email with Attachment"
-	msg.Text = "Please find the attached document."
-	msg.AttachmentPath = "gopher.webp"
 
 	if id, err := client.SendEmail(msg); err != nil {
 		handleError("email with attachment", err)
