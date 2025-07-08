@@ -66,57 +66,6 @@ func NewMailgunClient(baseURL, domain, key string) *MailgunClient {
 	}
 }
 
-// SendRequest sends an email
-func (c *MailgunClient) SendRequest(message bytes.Buffer, contentType string) (id string, err error) {
-	req, err := http.NewRequest("POST", c.url, &message)
-	if err != nil {
-		return "", fmt.Errorf("creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", contentType)
-	req.SetBasicAuth("api", c.apiKey)
-
-	var responseBody []byte
-	const retry = 3
-
-Loop:
-	for i := range retry {
-
-		resp, err := c.client.Do(req)
-		if err != nil {
-			return "", fmt.Errorf("sending request: %w", err)
-		}
-		defer resp.Body.Close()
-
-		responseBody, err = io.ReadAll(resp.Body)
-		if err != nil {
-			return "", fmt.Errorf("reading response body: %w", err)
-		}
-
-		switch {
-		case resp.StatusCode == 429,
-			resp.StatusCode == 500:
-			time.Sleep(time.Second * time.Duration(math.Pow10(i+1)))
-			continue
-		case resp.StatusCode >= 400:
-			return "", HTTPStatusError{
-				StatusCode: resp.StatusCode,
-				Message:    string(responseBody),
-			}
-		default: // status code < 400
-			break Loop
-		}
-	}
-
-	// An ad hoc struct for extracting the response ID
-	var response struct {
-		Id string `json:"id"`
-	}
-
-	err = json.Unmarshal(responseBody, &response)
-	return response.Id, nil
-}
-
 func (c *MailgunClient) SendEmail(msg EmailMessage) (id string, err error) {
 	var message bytes.Buffer
 
@@ -173,4 +122,55 @@ func (c *MailgunClient) SendEmail(msg EmailMessage) (id string, err error) {
 	}
 
 	return id, nil
+}
+
+// SendRequest sends an email
+func (c *MailgunClient) SendRequest(message bytes.Buffer, contentType string) (id string, err error) {
+	req, err := http.NewRequest("POST", c.url, &message)
+	if err != nil {
+		return "", fmt.Errorf("creating request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", contentType)
+	req.SetBasicAuth("api", c.apiKey)
+
+	var responseBody []byte
+	const retry = 3
+
+Loop:
+	for i := range retry {
+
+		resp, err := c.client.Do(req)
+		if err != nil {
+			return "", fmt.Errorf("sending request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		responseBody, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("reading response body: %w", err)
+		}
+
+		switch {
+		case resp.StatusCode == 429,
+			resp.StatusCode == 500:
+			time.Sleep(time.Second * time.Duration(math.Pow10(i+1)))
+			continue
+		case resp.StatusCode >= 400:
+			return "", HTTPStatusError{
+				StatusCode: resp.StatusCode,
+				Message:    string(responseBody),
+			}
+		default: // status code < 400
+			break Loop
+		}
+	}
+
+	// An ad hoc struct for extracting the response ID
+	var response struct {
+		Id string `json:"id"`
+	}
+
+	err = json.Unmarshal(responseBody, &response)
+	return response.Id, nil
 }
